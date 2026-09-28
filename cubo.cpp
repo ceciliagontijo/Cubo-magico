@@ -1,9 +1,3 @@
-// =====================================================================
-//  cubo.cpp  -  implementacao do ESTADO do cubo (matriz 2x2x2) e da
-//               parte "jogar manualmente" (ver cubo.h para a
-//               explicacao da modelagem)
-// =====================================================================
-
 #include "cubo.h"
 #include <iostream>
 #include <random>
@@ -15,9 +9,6 @@ const array<char,6>   LETRA_COR = {'W','Y','G','C','O','R'}; // Branco,Amarelo,V
 const array<string,6> NOME_COR  = {"Branco","Amarelo","Verde","Azul","Laranja","Vermelho"};
 const array<char,12>  MOVIMENTOS = {'U','D','F','B','L','R','u','d','f','b','l','r'};
 
-// ---------------------------------------------------------------------
-// 1) ESTADO (matriz 2x2x2: cubo[x][y][z], x,y,z em {0,1})
-// ---------------------------------------------------------------------
 CubeState::CubeState() {
     for (int x = 0; x < 2; x++) for (int y = 0; y < 2; y++) for (int z = 0; z < 2; z++) {
         Corner c;
@@ -38,24 +29,22 @@ string CubeState::key() const {
     return k;
 }
 
-// FUNCAO AVALIADORA (parte 1: teste de objetivo) -----------------------
-// O cubo esta resolvido quando cada face tem as 4 pecas da mesma cor.
 bool CubeState::isSolved() const {
-    for (int y : {0,1}) { // faces U (y=1) e D (y=0)
+    for (int y : {0,1}) { 
         int ref = -1;
         for (int x : {0,1}) for (int z : {0,1}) {
             int v = cubo[x][y][z].cUD;
             if (ref == -1) ref = v; else if (v != ref) return false;
         }
     }
-    for (int z : {0,1}) { // faces F (z=1) e B (z=0)
+    for (int z : {0,1}) { 
         int ref = -1;
         for (int x : {0,1}) for (int y : {0,1}) {
             int v = cubo[x][y][z].cFB;
             if (ref == -1) ref = v; else if (v != ref) return false;
         }
     }
-    for (int x : {0,1}) { // faces L (x=0) e R (x=1)
+    for (int x : {0,1}) {
         int ref = -1;
         for (int y : {0,1}) for (int z : {0,1}) {
             int v = cubo[x][y][z].cLR;
@@ -96,13 +85,6 @@ void CubeState::print() const {
     cout << "(U=topo D=baixo F=frente B=fundo L=esquerda R=direita)\n";
 }
 
-// ---------------------------------------------------------------------
-// Movimentos de face
-// ---------------------------------------------------------------------
-// Quando um canto gira em torno do eixo Y (movimentos U/D), os
-// adesivos que estavam voltados para X e para Z trocam de eixo entre
-// si (o adesivo de cima/baixo do canto nao muda). Em torno do eixo Z
-// (F/B) trocam X<->Y. Em torno do eixo X (L/R) trocam Y<->Z.
 enum Eixo { EIXO_Y, EIXO_Z, EIXO_X };
 
 static Corner trocarEixos(const Corner& c, Eixo eixo) {
@@ -114,15 +96,8 @@ static Corner trocarEixos(const Corner& c, Eixo eixo) {
     return c;
 }
 
-// As 6 rotacoes de face no sentido horario (vistas de fora da face).
-// Cada uma pega os 4 cantos daquela camada (a fatia da matriz com um
-// eixo fixo) e calcula a NOVA posicao deles na matriz (rotacao de 90
-// graus) + troca os eixos dos adesivos (funcao trocarEixos acima).
-//
-// Como x,y,z so valem 0 ou 1, "virar para o outro lado" nesse eixo e
-// simplesmente "1 - valor" (0 vira 1, 1 vira 0).
 static CubeState moveU(const CubeState& in) {
-    CubeState out = in; int y = 1; // camada de cima
+    CubeState out = in; int y = 1; 
     for (int x : {0,1}) for (int z : {0,1}) {
         int nx = 1 - z, ny = y, nz = x;
         out.cubo[nx][ny][nz] = trocarEixos(in.cubo[x][y][z], EIXO_Y);
@@ -130,7 +105,7 @@ static CubeState moveU(const CubeState& in) {
     return out;
 }
 static CubeState moveD(const CubeState& in) {
-    CubeState out = in; int y = 0; // camada de baixo
+    CubeState out = in; int y = 0; 
     for (int x : {0,1}) for (int z : {0,1}) {
         int nx = z, ny = y, nz = 1 - x;
         out.cubo[nx][ny][nz] = trocarEixos(in.cubo[x][y][z], EIXO_Y);
@@ -138,7 +113,7 @@ static CubeState moveD(const CubeState& in) {
     return out;
 }
 static CubeState moveF(const CubeState& in) {
-    CubeState out = in; int z = 1; // camada da frente
+    CubeState out = in; int z = 1; 
     for (int x : {0,1}) for (int y : {0,1}) {
         int nx = y, ny = 1 - x, nz = z;
         out.cubo[nx][ny][nz] = trocarEixos(in.cubo[x][y][z], EIXO_Z);
@@ -146,7 +121,7 @@ static CubeState moveF(const CubeState& in) {
     return out;
 }
 static CubeState moveB(const CubeState& in) {
-    CubeState out = in; int z = 0; // camada do fundo
+    CubeState out = in; int z = 0; 
     for (int x : {0,1}) for (int y : {0,1}) {
         int nx = 1 - y, ny = x, nz = z;
         out.cubo[nx][ny][nz] = trocarEixos(in.cubo[x][y][z], EIXO_Z);
@@ -154,7 +129,7 @@ static CubeState moveB(const CubeState& in) {
     return out;
 }
 static CubeState moveL(const CubeState& in) {
-    CubeState out = in; int x = 0; // camada da esquerda
+    CubeState out = in; int x = 0; 
     for (int y : {0,1}) for (int z : {0,1}) {
         int nx = x, ny = 1 - z, nz = y;
         out.cubo[nx][ny][nz] = trocarEixos(in.cubo[x][y][z], EIXO_X);
@@ -162,7 +137,7 @@ static CubeState moveL(const CubeState& in) {
     return out;
 }
 static CubeState moveR(const CubeState& in) {
-    CubeState out = in; int x = 1; // camada da direita
+    CubeState out = in; int x = 1; 
     for (int y : {0,1}) for (int z : {0,1}) {
         int nx = x, ny = z, nz = 1 - y;
         out.cubo[nx][ny][nz] = trocarEixos(in.cubo[x][y][z], EIXO_X);
@@ -182,9 +157,6 @@ static CubeState aplicarMovimentoCW(const CubeState& in, char mv) {
     return in;
 }
 
-// Funcao publica: aceita tanto o sentido horario ('U') quanto o
-// anti-horario ('u'). O anti-horario e o mesmo giro horario repetido
-// 3 vezes (matematicamente equivalente a girar uma vez ao contrario).
 CubeState aplicarMovimento(const CubeState& in, char mv) {
     char base = (char)toupper(mv);
     CubeState out = aplicarMovimentoCW(in, base);
@@ -195,11 +167,8 @@ CubeState aplicarMovimento(const CubeState& in, char mv) {
     return out;
 }
 
-// ---------------------------------------------------------------------
-// Parte "jogar manualmente" / interface com o usuario
-// ---------------------------------------------------------------------
 CubeState embaralhar(unsigned seed, int quantidadeMovimentos, string& movimentosUsados) {
-    CubeState estado; // comeca resolvido
+    CubeState estado; 
     mt19937 gerador(seed);
     uniform_int_distribution<int> dist(0, 11);
     movimentosUsados.clear();

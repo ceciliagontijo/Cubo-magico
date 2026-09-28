@@ -7,9 +7,6 @@
 
 using namespace std;
 
-// ---------------------------------------------------------------------
-// Cores classicas de cubo magico (mesma ordem de COR_U..COR_R)
-// ---------------------------------------------------------------------
 static Color corDoAdesivo(int idx) {
     switch (idx) {
         case COR_U: return WHITE;
@@ -22,9 +19,6 @@ static Color corDoAdesivo(int idx) {
     return GRAY;
 }
 
-// ---------------------------------------------------------------------
-// Botao simples: desenha e devolve true no frame em que foi clicado
-// ---------------------------------------------------------------------
 struct Botao {
     Rectangle rect;
     string texto;
@@ -43,10 +37,6 @@ static bool desenharBotao(const Botao& b, Color cor = LIGHTGRAY, int fonte = 18)
     return sobre && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
 }
 
-// ---------------------------------------------------------------------
-// Desenha o cubo inteiro planificado (mesma planificacao usada no
-// terminal), com cada adesivo como um quadrado colorido.
-// ---------------------------------------------------------------------
 static void desenharCubo(const CubeState& cubo, int baseX, int baseY, int tam) {
     array<int,24> a = cubo.paraAdesivos();
     int gap = 4;
@@ -56,10 +46,8 @@ static void desenharCubo(const CubeState& cubo, int baseX, int baseY, int tam) {
         DrawRectangle(x, y, tam, tam, corDoAdesivo(a[idxAdesivo]));
         DrawRectangleLines(x, y, tam, tam, BLACK);
     };
-    // U (topo) -> colunas 2,3 / linhas 0,1
     celula(2,0,U0+0); celula(3,0,U0+1);
     celula(2,1,U0+2); celula(3,1,U0+3);
-    // L, F, R, B -> linhas 2,3
     celula(0,2,L0+0); celula(1,2,L0+1);
     celula(0,3,L0+2); celula(1,3,L0+3);
     celula(2,2,F0+0); celula(3,2,F0+1);
@@ -68,7 +56,6 @@ static void desenharCubo(const CubeState& cubo, int baseX, int baseY, int tam) {
     celula(4,3,R0+2); celula(5,3,R0+3);
     celula(6,2,B0+0); celula(7,2,B0+1);
     celula(6,3,B0+2); celula(7,3,B0+3);
-    // D (baixo) -> colunas 2,3 / linhas 4,5
     celula(2,4,D0+0); celula(3,4,D0+1);
     celula(2,5,D0+2); celula(3,5,D0+3);
 }
@@ -78,8 +65,7 @@ int main() {
     InitWindow(LARGURA, ALTURA, "Cubo Magico 2x2x2 - IA (BFS / IDDFS / A*)");
     SetTargetFPS(60);
 
-    // --- estado do jogo -------------------------------------------------
-    CubeState cubo; // comeca resolvido
+    CubeState cubo; 
     string seedTexto = "7";
     bool seedFocado = false;
     int profundidade = 7;
@@ -90,15 +76,13 @@ int main() {
     ResultadoBusca resultado;
     double tempoSegundos = 0.0;
 
-    string animSeq;      // sequencia da solucao sendo animada
+    string animSeq;      
     size_t animIndex = 0;
     int animContador = 0;
     const int FRAMES_POR_MOVIMENTO = 25;
 
-    // --- layout vertical (todas as coordenadas Y calculadas aqui, com
-    //     espacamento generoso para nenhum texto/botao se sobrepor) ----
     const int Y_TITULO      = 12;
-    const int Y_CUBO        = 55;                 // ate ~ Y_CUBO+296
+    const int Y_CUBO        = 55;               
     const int Y_LEGENDA     = 368;
     const int Y_LABEL_JOGAR = 400;
     const int Y_BOTOES_HOR  = 424;
@@ -110,7 +94,6 @@ int main() {
     const int Y_BOTOES_IA   = Y_LABEL_IA + 22;
     const int Y_RESULTADO   = Y_BOTOES_IA + 42 + 22;
 
-    // --- botoes de movimento manual (horario em cima, anti embaixo) ----
     const char letras[6] = {'U','D','F','B','L','R'};
     const int  teclas[6] = {KEY_U, KEY_D, KEY_F, KEY_B, KEY_L, KEY_R};
     Botao botaoHor[6], botaoAnti[6];
@@ -133,9 +116,6 @@ int main() {
     Botao botaoAstar = { {410, (float)Y_BOTOES_IA, 140, 42}, "A*" };
 
     while (!WindowShouldClose()) {
-        // ------------------------------------------------------------
-        // ENTRADA
-        // ------------------------------------------------------------
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
             seedFocado = CheckCollisionPointRec(GetMousePosition(), caixaSeed);
 
@@ -148,8 +128,6 @@ int main() {
             if (IsKeyPressed(KEY_BACKSPACE) && !seedTexto.empty()) seedTexto.pop_back();
         }
 
-        // atalhos de teclado para os movimentos (desativados enquanto
-        // o usuario esta digitando a seed)
         bool animando = animIndex < animSeq.size();
         if (!seedFocado && !animando) {
             bool shift = IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT);
@@ -161,12 +139,8 @@ int main() {
             }
         }
 
-        // flags para acoes que serao tratadas apos desenhar este frame
         bool cliqueBFS = false, cliqueIDDFS = false, cliqueAstar = false;
 
-        // ------------------------------------------------------------
-        // DESENHO
-        // ------------------------------------------------------------
         BeginDrawing();
         ClearBackground(RAYWHITE);
 
@@ -176,7 +150,6 @@ int main() {
         if (cubo.isSolved())
             DrawText("RESOLVIDO!", 500, Y_CUBO+5, 24, (Color){0,150,0,255});
 
-        // legenda de cores
         {
             const char* nomes[6] = {"Branco(U)","Amarelo(D)","Verde(F)","Azul(B)","Laranja(L)","Vermelho(R)"};
             int cores[6] = {COR_U,COR_D,COR_F,COR_B,COR_L,COR_R};
@@ -192,11 +165,10 @@ int main() {
             if (desenharBotao(botaoHor[i]))  cubo = aplicarMovimento(cubo, letras[i]);
             if (desenharBotao(botaoAnti[i])) cubo = aplicarMovimento(cubo, (char)tolower(letras[i]));
         }
-        if (animando) { // mostra os botoes desabilitados (sem clique) durante a animacao
+        if (animando) {
             for (int i = 0; i < 6; i++) { desenharBotao(botaoHor[i], GRAY); desenharBotao(botaoAnti[i], GRAY); }
         }
 
-        // caixa de seed
         DrawText("Seed:", (int)caixaSeed.x, Y_LABEL_SEED, 16, DARKGRAY);
         DrawRectangleRec(caixaSeed, seedFocado ? Fade(SKYBLUE, 0.3f) : LIGHTGRAY);
         DrawRectangleLinesEx(caixaSeed, 1, DARKGRAY);
@@ -228,8 +200,6 @@ int main() {
         if (desenharBotao(botaoIDDFS)) cliqueIDDFS = true;
         if (desenharBotao(botaoAstar)) cliqueAstar = true;
 
-        // resultado da ultima busca (tudo empilhado numa unica coluna,
-        // para nomes longos como o do IDDFS nunca colidirem com outro texto)
         int ry = Y_RESULTADO;
         if (temResultado) {
             DrawText(("Algoritmo: " + nomeAlgoritmo).c_str(), 40, ry, 18, BLACK);
@@ -246,11 +216,6 @@ int main() {
 
         EndDrawing();
 
-        // ------------------------------------------------------------
-        // ACOES ADIADAS (rodam DEPOIS do frame acima ser mostrado, para
-        // a mensagem "Resolvendo..." aparecer antes da busca travar a
-        // tela por um instante em embaralhamentos mais profundos)
-        // ------------------------------------------------------------
         if (cliqueBFS || cliqueIDDFS || cliqueAstar) {
             BeginDrawing();
             ClearBackground(RAYWHITE);
@@ -269,7 +234,6 @@ int main() {
             animContador = 0;
         }
 
-        // animacao: aplica um movimento da solucao a cada X frames
         if (animIndex < animSeq.size()) {
             animContador++;
             if (animContador >= FRAMES_POR_MOVIMENTO) {

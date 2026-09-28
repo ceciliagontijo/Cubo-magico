@@ -1,16 +1,3 @@
-// =====================================================================
-//  main.cpp
-// =====================================================================
-//  Trabalho T1 - Simulador de cubo magico 2x2x2 com solucao por IA.
-//
-//  Este arquivo so cuida do fluxo principal (menu). A logica do cubo
-//  e do jogo manual esta em cubo.h/cubo.cpp; os algoritmos de busca
-//  (BFS, IDDFS, A*) estao em busca.h/busca.cpp.
-//
-//  Compilar:  g++ -std=c++17 -O2 -o cubo2x2 main.cpp cubo.cpp busca.cpp
-//  Executar:  ./cubo2x2
-// =====================================================================
-
 #include "cubo.h"
 #include "busca.h"
 #include <iostream>
